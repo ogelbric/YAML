@@ -1,0 +1,230 @@
+
+
+Harbor on Project Pacific demo (enable harbor in vCenter)
+==========================================================
+
+	Demo is as follows…
+	Take image from internet (outside repo)
+	Move image to server that can see outside and inside
+	Move image to internal harbor
+		Make worker nodes aware of internal harbor cert	
+			(convoluted jump from jump server to vCenter to Supervisor master to guest cluster worker)
+	Create a secret in guest cluster
+	Make YAML file aware of image location change
+	Make YAML file aware of using secret
+	Deploy changed YAML and observer image is being pulled from internal Harbor
+
+
+
+	ssh root@10.197.79.2 (jump server that can see internet and nested env)
+	start docker: dockerd -> ^Z -> bg
+
+	Clean ENV:
+	----------
+	docker ps -a
+	docker images
+	docker stop $(docker ps -aq)
+	docker rm $(docker ps -aq)
+	docker image prune -a 
+	docker ps -a
+	docker images
+
+	Get the Harbor IP:
+	------------------
+	/usr/local/bin/kubectl-vsphere login --vsphere-username administrator@vsphere.local --server=https://192.168.2.1 --insecure-skip-tls-verify
+
+	Swap context:
+	-------------
+	kubectl config use-context vmware-system-registry-1081087140
+	kubectl get svc (get the IP for harbor)
+
+	Log onto Harbor (https://192.168.2.3)
+	go to projects -> namespace -> registry -> registry certificate link (copy link)
+
+	https://192.168.2.3/api/systeminfo/getcert
+	mkdir /etc/docker/certs.d/192.168.2.3
+	cd /etc/docker/certs.d/192.168.2.3
+	wget "https://192.168.2.3/api/systeminfo/getcert" -O ca.crt --no-check-certificate
+
+	Test login
+	docker login 192.168.2.3 -u administrator@vsphere.local
+
+	docker images
+	docker pull bepsoccer/all-in-one-hackazon
+	docker tag bepsoccer/all-in-one-hackazon 192.168.2.3/namespace1000/all-in-one-hackazon
+	docker push 192.168.2.3/namespace1000/all-in-one-hackazon  (see image in GUI in Harbor)
+
+	Test:
+	docker images
+	docker image prune -a
+	docker images
+	docker login 192.168.2.3 -u administrator@vsphere.local
+	docker pull 192.168.2.3/namespace1000/all-in-one-hackazon
+
+	Deploy image on K8 cluster:
+
+	kubectl vsphere login --server 192.168.2.1 \
+                --vsphere-username administrator@vsphere.local \
+                --managed-cluster-namespace namespace1000 \
+                --managed-cluster-name orf-my-tanzu-k8-cluster1001 \
+                --insecure-skip-tls-verify
+
+
+	kubectl config use-context orf-my-tanzu-k8-cluster1001
+	kubectl config set-context --current --namespace=default
+	kubectl get all -A
+	kubectl get nodes
+	cd
+	kubectl apply -f authorize-psp-for-gc-service-accounts.yaml.1
+	cp hackazon6.yaml hackazon6.yaml-localharbor
+	vi hackazon6.yaml-localharbor
+
+	s#ogelbric/hackazon:beer4#192.168.2.3/namespace1000/all-in-one-hackazon
+
+
+	kubectl apply -f hackazon6.yaml-localharbor
+	kubectl get pods
+	
+	kubectl get deployment hackazon -o wide
+	
+	kubectl describe deployment hackazon
+	kubectl get all
+	kubectl get services
+
+
+	kubectl get pods -o wide  # there are 3 pods running
+	kubectl get nodes         # there are 2 worker nodes # notice 2 pods are running on the same Node
+
+	kubectl get events -w
+
+	Error --> Get https://192.168.2.3/v2/: x509: certificate signed by unknown authority
+	Worker(s) need cert!!!
+
+
+	kubectl delete -f hackazon6.yaml-localharbor
+
+
+	ssh to vCenter and then to master fo supervisor
+	----------------------------------------------- 
+	ssh root@192.168.1.50
+	shell
+	cd /tmp
+	wget "https://192.168.2.3/api/systeminfo/getcert" -O ca.crt --no-check-certificate
+	/usr/lib/vmware-wcp/decryptK8Pwd.py
+	scp /tmp/ca.crt root@192.168.1.60:/tmp/ca.crt
+
+	Jump to master:
+	ssh root@192.168.1.60
+	use password from above command
+
+
+	export NAMESPACE=namespace1000
+	kubectl -n $NAMESPACE get secret orf-my-tanzu-k8-cluster1001-ssh -o jsonpath='{.data.ssh-privatekey}' | base64 -d > test-cluster-ssh-key
+	chmod 600 test-cluster-ssh-key
+
+
+	kubectl -n $NAMESPACE get virtualmachines
+	VM_IP1=`kubectl -n $NAMESPACE get virtualmachine/orf-my-tanzu-k8-cluster1001-md-0-7649b7bd5-7fxtk  -o jsonpath='{.status.vmIp}'`
+	echo $VM_IP1
+	scp -i test-cluster-ssh-key /tmp/ca.crt vmware-system-user@$VM_IP1:/tmp/ca.crt
+	ssh -i test-cluster-ssh-key vmware-system-user@$VM_IP1
+
+	Run on guest cluster worker 1 node as test
+	----------------------------------------
+	cd /tmp
+	sudo bash -c "cat /tmp/ca.crt >> /etc/pki/tls/certs/ca-bundle.crt"
+	sudo systemctl restart docker.service
+
+
+	Test docker:
+	sudo docker images
+	sudo docker login 192.168.2.3 -u administrator@vsphere.local
+	sudo docker pull 192.168.2.3/namespace1000/all-in-one-hackazon
+	sudo docker image rm 192.168.2.3/namespace1000/all-in-one-hackazon
+	
+	exit (exit worker node 1)
+
+
+	VM_IP2=`kubectl -n $NAMESPACE get virtualmachine/orf-my-tanzu-k8-cluster1001-md-0-7649b7bd5-prl5f  -o jsonpath='{.status.vmIp}'`
+	echo $VM_IP2
+	scp -i test-cluster-ssh-key /tmp/ca.crt vmware-system-user@$VM_IP2:/tmp/ca.crt
+	ssh -i test-cluster-ssh-key vmware-system-user@$VM_IP2
+
+
+	Run on guest cluster worker 2 node as test
+	----------------------------------------
+	cd /tmp
+	sudo bash -c "cat /tmp/ca.crt >> /etc/pki/tls/certs/ca-bundle.crt"
+	sudo systemctl restart docker.service
+
+
+	Test docker:
+	sudo docker images
+	sudo docker login 192.168.2.3 -u administrator@vsphere.local
+	sudo docker pull 192.168.2.3/namespace1000/all-in-one-hackazon
+	sudo docker image rm 192.168.2.3/namespace1000/all-in-one-hackazon
+
+	exit
+	exit
+	exit
+	exit
+
+Try again from guest cluster
+
+	kubectl vsphere login --server 192.168.2.1 \
+                --vsphere-username administrator@vsphere.local \
+                --managed-cluster-namespace namespace1000 \
+                --managed-cluster-name orf-my-tanzu-k8-cluster1001 \
+                --insecure-skip-tls-verify
+
+
+	kubectl config use-context orf-my-tanzu-k8-cluster1001
+	kubectl config set-context --current --namespace=default
+	kubectl get all -A
+	kubectl get nodes
+
+	kubectl apply -f authorize-psp-for-gc-service-accounts.yaml.1
+
+	Create Secret:
+	kubectl create secret docker-registry regcred --docker-server=192.168.2.3 --docker-username="administrator@vsphere.local" --docker-password='VMware1!' --docker-email=administrator@vsphere.local
+
+	cp hackazon6.yaml hackazon6.yaml-localharbor
+
+	Change image location ad add secret to YAML file
+
+	vi hackazon6.yaml-localharbor
+
+	s#ogelbric/hackazon:beer4#192.168.2.3/namespace1000/all-in-one-hackazon
+
+    spec:
+      containers:
+      - name: hackazon
+        image: 192.168.2.3/namespace1000/all-in-one-hackazon
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+        - name: regcred
+
+
+	kubectl apply -f hackazon6.yaml-localharbor
+	kubectl get pods
+	
+	kubectl get deployment hackazon -o wide
+	
+	kubectl describe deployment hackazon
+	kubectl get all
+	kubectl get services
+
+
+	kubectl get pods -o wide  # there are 3 pods running
+	kubectl get nodes         # there are 2 worker nodes # notice 2 pods are running on the same Node
+
+	kubectl get events -w
+
+	Use browser to go to 
+	echo "https://"`kubectl get svc | grep hackazon | awk '{ print $4 }'`
+
+	kubectl delete -f hackazon6.yaml-localharbor
+
+
+
