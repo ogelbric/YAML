@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hackazon
+  labels:
+    app: hackazon
+spec:
+  selector:
+    matchLabels:
+      app: hackazon
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hackazon
+  template:
+    metadata:
+      labels:
+        app: hackazon
+    spec:
+      containers:
+      - name: hackazon
+        image: ogelbric/hackazon:beer4
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hackazon
+  name: hackazon
+spec:
+  ports:
+  - name: http-port
+    port: 80
+    protocol: TCP
+  selector:
+    app: hackazon
+  sessionAffinity: None
+  type: LoadBalancer
