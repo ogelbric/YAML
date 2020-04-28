@@ -1,0 +1,185 @@
+
+=============================================================================
+Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
+==============================================================================
+
+	Install Document
+	----------------
+	Document: https://docs.vmware.com/en/VMware-vSphere/7.0/vsphere-esxi-vcenter-server-70-vsphere-with-kubernetes-guide.pdf
+
+
+	vCenter setup of Workload Management
+	====================================
+	Create New Nested Environment:
+	------------------------------
+	cd C:\Users\Administrator\Downloads
+	C:\"Program Files"\PowerShell\7-preview\pwsh.exe C:\Users\Administrator\Downloads\project-pacific-vghetto-lab-deployment.ps1
+	
+	Create workload platform (79):			Create workload platform (96):		Dallas Server(87):
+	-------------------------------			-------------------------------		---------------------
+	DNS: 10.197.79.2				DNS: 10.197.96.7			DNS: 10.118.87.50
+	NTP: 10.128.152.81				NTP: 10.128.152.81			NTP: 10.128.152.81
+	G/W: 192.168.1.1				G/W: 192.168.1.1			G/W: 192.168.1.10
+	Start: 192.168.1.60				Start: 192.168.1.60			Start: 192.168.1.60/160
+	I/E CIDR: 192.168.2.0/25 | 192.168.2.128/25
+	I/E CIDR: 192.168.3.0/25 | 192.168.3.128/25
+
+	Create Namespace
+	----------------
+	Namespace: namespace1000
+	Add User access: administrator and devops
+	Add storage to namespace1000
+
+	Content library on vCenter(Kubernetes)
+	--------------------------------------
+	
+	https://wp-content.vmware.com/v2/latest/lib.json   (kubectl get virtualmachineimages)
+						 	   (kubectl describe virtualmachineimages)
+	Map content lib to namespace/vSphere cluster
+
+	Log onto Supervisor Cluster:
+	----------------------------
+	rm .kube/config
+	/usr/local/bin/kubectl-vsphere login --vsphere-username administrator@vsphere.local --server=https://192.168.2.1 --insecure-skip-tls-verify
+
+	Swap context:
+	-------------
+	kubectl config use-context namespace1000
+
+	Enable Ingress
+	--------------
+	kubectl apply -f ./enable-policy.yaml
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/enable-policy.yaml
+
+	Sample Deployment on Supervisor cluster
+	---------------------------------------
+	kubectl get nodes
+	kubectl get ns
+	kubectl get pods --all-namespaces
+	
+	kubectl get deployments
+	kubectl apply -f nginx-lbsvcGA.yaml
+	kubectl create deployment nginxdev1 --image=nginx
+	kubectl create deployment nginxdev2 --image=nginx
+	kubectl get deployments
+	kubectl get pods -o wide
+	kubectl -n namespace1000 get events -w
+
+	kubectl describe pod `kubectl get pods | awk '{ print $1}' | tail -1`
+	kubectl get services
+	kubectl create service loadbalancer nginxdev1 --tcp=80:80
+	kubectl create service loadbalancer nginxdev2 --tcp=80:80
+	kubectl get services
+	telnet 192.168.2.2 80
+
+	Storage
+	-------
+	kubectl get storageclass
+	kubectl apply -f ./acme-air2.yaml
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/acme-air2.yaml
+	kubectl get pv
+	kubectl get pvc
+	kubectl describe pvc
+
+	Clean up
+	--------
+	kubectl delete service nginxdev1
+	kubectl delete deployment nginxdev1
+	kubectl delete deployment acme-web 
+	kubectl delete service acme-web
+	kubectl delete service mongodb
+	kubectl delete StatefulSet mongodb 
+	kubectl delete pod mongodb-0
+	kubectl delete -f ./nginx-lbsvcGA.yaml
+
+	Get current managed clusters:
+	-----------------------------
+	kubectl get tanzukubernetesclusters
+
+	Deploy Guest Cluster (guestcluster1001.yaml)
+	--------------------------------------------
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA.yaml
+	kubectl apply -f ./guestcluster1001GA.yaml
+	kubectl apply -f ./guestcluster1002GA.yaml
+	kubectl get managedclusters
+	kubectl -n namespace1000 get events -w
+
+	Check on the guest cluster:
+	---------------------------	
+	kubectl get all -A
+	kubectl get nodes
+	kubectl get tanzukubernetesclusters
+	kubectl describe tanzukubernetescluster tkg-cluster-1
+	kubectl describe virtualmachineservice
+	kubectl describe virtualnetwork
+	kubectl -n namespace1000 get events -w
+	kubectl get cluster,machines,virtualmachines
+	kubectl describe clusters.cluster.x-k8s.io tkg-cluster-1
+	kubectl get machine.cluster.x-k8s.io    #Cluster API
+	kubectl describe virtualmachines
+	
+	Get to the new guest cluster(s)
+	--------------------------------
+	/usr/local/bin/kubectl-vsphere login --vsphere-username administrator@vsphere.local --server=https://192.168.2.1 --insecure-skip-tls-verify
+	
+	kubectl config get-contexts
+	kubectl config use-context namespace1000
+	kubectl get services # get IP for new cluster
+
+	kubectl vsphere login --server 192.168.2.1 \
+                --vsphere-username administrator@vsphere.local \
+                --managed-cluster-namespace namespace1000 \
+                --managed-cluster-name tkg-cluster-1 \
+                --insecure-skip-tls-verify
+
+
+	kubectl config use-context tkg-cluster-1
+	
+	kubectl config set-context --current --namespace=default
+	kubectl get all -A
+	kubectl get nodes
+
+	kubectl apply -f authorize-psp-for-gc-service-accounts.yaml
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/authorize-psp-for-gc-service-accounts.yaml
+	
+	kubectl apply -f nginx-lbsvcGA.yaml
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
+	kubectl apply -f hackazon6GA.yaml       (changes for 1.16 https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16/)
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/hackazon6GA.yaml
+	kubectl get pods
+	kubectl get deployment nginx -o wide
+	kubectl get deployment hackazon -o wide
+	kubectl describe deployment nginx
+	kubectl describe deployment hackazon
+	kubectl get all
+	kubectl get services
+	kubectl get pods -o wide  # there are 3 pods running
+	kubectl get nodes         # there are 2 worker nodes # notice 2 pods are running on the same Node
+
+	Storage
+	-------
+	kubectl get storageclass
+	kubectl apply -f ./acme-air2.yaml
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/acme-air2.yaml
+	kubectl get pv
+	kubectl get pvc
+	kubectl describe pvc
+
+	Clean up
+	--------
+	kubectl delete -f ./acme-air2.yaml
+	kubectl delete pvc acme-air2-mongodb-0
+	kubectl delete -f ./nginx-lbsvcGA.yaml
+	kubectl delete -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
+	kubectl delete -f ./hackazon6GA.yaml
+	kubectl delete -f https://github.com/ogelbric/YAML/raw/master/hackazon6GA.yaml
+	kubectl config use-context namespace1000
+	kubectl get tanzukubernetesclusters
+	kubectl delete -f ./guestcluster1001.yaml
+	kubectl delete service nginxdev1
+	kubectl delete deployment nginxdev1
+
+	Power down vapp in base vCenter
+	Delete vapp in base vCenter
+
+
