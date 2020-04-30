@@ -59,6 +59,7 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	
 	kubectl get deployments
 	kubectl apply -f nginx-lbsvcGA.yaml
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
 	kubectl create deployment nginxdev1 --image=nginx
 	kubectl create deployment nginxdev2 --image=nginx
 	kubectl get deployments
@@ -181,5 +182,6 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 
 	Power down vapp in base vCenter
 	Delete vapp in base vCenter
+
 
 
