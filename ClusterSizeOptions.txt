@@ -1,0 +1,20 @@
+Cluster Size options
+=====================
+https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-kubernetes/GUID-7351EEFF-4EF0-468F-A19B-6CEA40983D3D.html
+
+Default Values for Select Virtual Machine Class Types
+
+Class			CPU	Memory (GB)	Storage (GB)	Reserved CPU and Memory
+guaranteed-xlarge	4	32		16		Yes
+best-effort-xlarge	4	32		16		No
+guaranteed-large	4	16		16		Yes
+best-effort-large	4	16		16		No
+guaranteed-medium	2	8		16		Yes
+best-effort-medium	2	8		16		No
+guaranteed-small	2	4		16		Yes
+best-effort-small	2	4		16		No
+guaranteed-xsmall	2	2		16		Yes
+best-effort-xsmall	2	2		16		No
+
+
+
