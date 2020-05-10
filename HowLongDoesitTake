@@ -1,0 +1,50 @@
+#!/bin/bash
+
+while [ `kubectl get machines  |  wc -l` == 0 ]; do
+        sleep 1
+        echo "Waiting for Cluster Deploy..."
+done
+
+export line="----------------------------------------------------------------------------------------------------------"
+export start=`date`
+export master=0
+export worker=1
+echo $line
+kubectl get machines -l cluster.x-k8s.io/cluster-name=tkg-cluster-1
+echo $line
+echo "Master:"
+echo $line
+export startmaster=`date`
+while [ `kubectl get machines -l cluster.x-k8s.io/cluster-name=tkg-cluster-1 | grep control | grep  running | wc -l` == 0 ]; do
+	sleep 60
+	echo "Waiting for master...sleeping"
+done
+export endmaster=`date`
+echo $line
+echo "Worker:"
+echo $line
+export startworker=`date`
+while [ `kubectl get machines -l cluster.x-k8s.io/cluster-name=tkg-cluster-1 | grep worker | grep  running | wc -l` == 0 ]; do
+	sleep 60
+	echo "Waiting for worker...sleeping"
+done
+export endworker=`date`
+echo $line
+kubectl get machines -l cluster.x-k8s.io/cluster-name=tkg-cluster-1
+echo $line
+export end=`date`
+echo $line
+echo "Master:"
+echo $line
+echo $startmaster
+echo $endmaster
+echo $line
+echo "Worker:"
+echo $startworker
+echo $endworker
+echo $line
+echo "Total:"
+echo $start
+echo $end
+echo $line
+
