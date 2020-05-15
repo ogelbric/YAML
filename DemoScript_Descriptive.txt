@@ -1,0 +1,177 @@
+vCenter 7 with Kubernetes Demo Script 
+--------------------------------------
+
+	Prerequisite vCenter 7 and NSX-T 3.0 is installed.
+	The workload platform is enabled in vCenter.
+
+Create a namespace in vCenter 7 with Kubernetes in the Supervisor cluster  
+-------------------------------------------------------------------------
+	This will set the boundaries for the consumer.
+
+	Menu -> Workload Management -> Namespace
+	Namespace: namespace1000
+
+	Set user access in the tile:
+	Add User access: administrator and devops
+	Add storage to the namespace in the storage tile
+
+Create a content library vCenter
+--------------------------------------
+
+	Menu -> Content Libraries
+		Name the Content Library: 
+			Kubernetes
+	Use this link for the library location
+		https://wp-content.vmware.com/v2/latest/lib.json   
+	Attach the content Library:
+		vCenter Cluster -> Configure -> Namespaces -> General -> Edit Content Library
+
+Log onto Supervisor Cluster:
+----------------------------
+	Delete any old Kubernetes config files
+		rm .kube/config
+	Log on (adjust API end point IP)
+	/usr/local/bin/kubectl-vsphere login --vsphere-username administrator@vsphere.local --server=https://192.168.2.1 --insecure-skip-tls-verify
+
+Set the context to the name space:
+---------------------------------
+	kubectl config use-context namespace1000
+
+Enable Ingress to the supervisor cluster:
+---------------------------------
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/enable-policy.yaml
+
+Sample Deployment on Supervisor cluster
+---------------------------------------
+	Get the Master and worker nodes:
+		kubectl get nodes
+	Get all Namespaces:
+		kubectl get ns
+	Get all running pods:
+		kubectl get pods --all-namespaces
+	Get the virtual machine images:
+		kubectl get virtualmachineimages
+	Get the details of the virtual machine image:
+		kubectl describe virtualmachineimages
+	Get any deployments currently in the cluster:
+		kubectl get deployments				Deploy nginx pods:
+		kubectl apply -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
+	Get deployments in the system:
+		kubectl get deployments
+	Observer the nginx running pod:
+		kubectl get pods -o wide
+	Observe the event log:
+		kubectl -n namespace1000 get events -w
+	Long description of the deployed pod:
+		kubectl describe pod `kubectl get pods | awk '{ print $1}' | tail -1`
+	List the external IPS and ports of the deployment:
+		kubectl get services
+	Test the connection for the service:
+		telnet 192.168.2.2 80
+
+Storage example deployment
+---------------------------------------
+	List the storage classes:
+		kubectl get storageclass
+	Create a new pod:	
+		kubectl apply -f https://github.com/ogelbric/YAML/raw/master/acme-air2.yaml
+	List the physical volume:	
+		kubectl get pv
+	List the physical volume claim:
+		kubectl get pvc
+	Long description of physical volume claim:
+		kubectl describe pvc
+
+Clean up of supervisor cluster pods/delpoyments:
+------------------------------------------------
+	kubectl delete deployment acme-web 
+	kubectl delete service acme-web
+	kubectl delete service mongodb
+	kubectl delete StatefulSet mongodb 
+	kubectl delete pod mongodb-0
+	kubectl delete -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
+
+Get current managed clusters:
+-----------------------------
+	kubectl get tanzukubernetesclusters
+
+Deploy Guest Cluster
+--------------------
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA.yaml
+	Get the deployed clusters:
+		kubectl get managedclusters
+	Watch cluster bing built:
+	 kubectl -n namespace1000 get events -w
+
+A few commands to heck on the guest cluster:
+------------------------------------------------
+	kubectl get all -A
+	kubectl get nodes
+	kubectl get tanzukubernetesclusters
+	kubectl describe tanzukubernetescluster tkg-cluster-1
+	kubectl describe virtualmachineservice
+	kubectl describe virtualnetwork
+	kubectl -n namespace1000 get events -w
+	kubectl get cluster,machines,virtualmachines
+	kubectl describe clusters.cluster.x-k8s.io tkg-cluster-1
+	kubectl get machine.cluster.x-k8s.io    #Cluster API
+	kubectl describe virtualmachines
+	
+Log on to the new guest cluster
+--------------------------------
+	kubectl vsphere login --server 192.168.2.1 \
+                --vsphere-username administrator@vsphere.local \
+                --managed-cluster-namespace namespace1000 \
+                --managed-cluster-name tkg-cluster-1 \
+                --insecure-skip-tls-verify
+
+	Swap context:
+		kubectl config use-context tkg-cluster-1
+		kubectl config set-context --current --namespace=default
+	Get all master and worker nodes:
+		kubectl get nodes
+	Get all running pods:
+			kubectl get all -A
+	Apply the roles the the guest cluster:
+		kubectl apply -f https://github.com/ogelbric/YAML/raw/master/authorize-psp-for-gc-service-accounts.yaml
+	Deploy nginx pods:
+		kubectl apply -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
+	Deploy hackazon pods:
+		kubectl apply -f https://github.com/ogelbric/YAML/raw/master/hackazon6GA.yaml
+	Observe the deployed pods:
+		kubectl get pods
+		kubectl get deployment nginx -o wide
+		kubectl get deployment hackazon -o wide
+		kubectl describe deployment nginx
+		kubectl describe deployment hackazon
+		kubectl get all
+	Get the external IP’s and ports for all deployments:
+		kubectl get services
+	Observer where the pods are running (worker nodes):
+		kubectl get pods -o wide  # there are 3 pods running
+		kubectl get nodes         # there are 2 worker nodes # notice 2 pods are running on the same Node
+
+Storage example
+--------------------------------
+	kubectl get storageclass
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/acme-air2.yaml
+	kubectl get pv
+	kubectl get pvc
+	kubectl describe pvc
+
+Clean up
+--------
+	kubectl delete -f ./https://github.com/ogelbric/YAML/raw/master/acme-air2.yaml
+	kubectl delete pvc acme-air2-mongodb-0
+	kubectl delete -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
+	kubectl delete -f https://github.com/ogelbric/YAML/raw/master/hackazon6GA.yaml
+	kubectl config use-context namespace1000
+	kubectl get tanzukubernetesclusters
+	kubectl delete -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA.yaml
+
+For reference the vCenter 7 with Kubernetes install document:
+	Install Document
+	----------------
+	Document: https://docs.vmware.com/en/VMware-vSphere/7.0/vsphere-esxi-vcenter-server-70-vsphere-with-kubernetes-guide.pdf
+
+
