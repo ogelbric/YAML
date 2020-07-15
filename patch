@@ -1,0 +1,8 @@
+read -r -d '' PATCH <<'EOF'
+spec:
+  distribution:
+    fullVersion: null
+    version: v1.17.7
+EOF
+echo $PATCH
+kubectl patch --type=merge tanzukubernetescluster tkg-cluster-1 --patch "$PATCH"
