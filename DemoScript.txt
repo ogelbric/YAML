@@ -32,7 +32,7 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 
 	Kubectl commands
 	----------------
-	In browserg got API end point and download kubectl installer
+	In browser go API end point and download kubectl installer
 	https://192.168.2.1/
 
 	Content library on vCenter(Kubernetes)
