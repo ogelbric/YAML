@@ -102,11 +102,20 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	-----------------------------
 	kubectl get tanzukubernetesclusters
 
-	Deploy Guest Cluster (guestcluster1001.yaml)
+	Deploy Guest Cluster 
 	--------------------------------------------
-	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA.yaml
-	kubectl apply -f ./guestcluster1001GA.yaml
-	kubectl apply -f ./guestcluster1002GA.yaml
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA-1workers.yaml.1178tkg
+	kubectl apply -f ./guestcluster1001GA-1workers.yaml.1178tkg
+
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA-1workers.yaml.1168tkg
+	kubectl apply -f ./guestcluster1001GA-1workers.yaml.1168tkg
+
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA-1workers.yaml.1177tkg
+	kubectl apply -f ./guestcluster1001GA-1workers.yaml.1177tkg
+
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA-1workers.yaml.11612tkg
+ 	kubectl apply -f ./guestcluster1001GA-1workers.yaml.11612tkg
+ 
 	kubectl get managedclusters
 	kubectl -n namespace1000 get events -w
 
@@ -123,6 +132,7 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl describe clusters.cluster.x-k8s.io tkg-cluster-1
 	kubectl get machine.cluster.x-k8s.io    #Cluster API
 	kubectl describe virtualmachines
+	kubectl get virtualmachineimages
 	
 	Get to the new guest cluster(s)
 	--------------------------------
