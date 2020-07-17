@@ -2,7 +2,7 @@ read -r -d '' PATCH <<'EOF'
 spec:
   distribution:
     fullVersion: null
-    version: v1.17.7
+    version: v1.17.8
 EOF
 echo $PATCH
-kubectl patch --type=merge tanzukubernetescluster tkg-cluster-1 --patch "$PATCH"
+kubectl patch --type=merge tanzukubernetescluster tkg-cluster-23 --patch "$PATCH"
