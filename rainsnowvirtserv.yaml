@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: rainsnow
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - acme-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /weather
+    route:
+    - destination:
+        host: weather
+        port:
+          number: 8080

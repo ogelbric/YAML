@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rain
+  template:
+    metadata:
+      labels:
+        app: rain
+        version: v1
+    spec:
+      containers:
+      - name: rain
+        image: wardviaene/http-echo
+        env:
+        - name: TEXT
+          value: Snow
+        - name: NEXT
+          value: "yes-1:8080"
+        ports:
+        - name: http
+          containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rain
+  labels:
+    app: rain
+spec:
+  selector:
+    app: rain
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
