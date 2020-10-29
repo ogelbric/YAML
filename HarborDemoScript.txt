@@ -129,14 +129,14 @@ Harbor on Project Pacific demo (enable harbor in vCenter)
 	scp -i test-cluster-ssh-key /tmp/ca.crt vmware-system-user@$VM_IP1:/tmp/ca.crt
 	ssh -i test-cluster-ssh-key vmware-system-user@$VM_IP1
 
-	Run on guest cluster worker 1 node as test
-	----------------------------------------
+	Run on guest cluster worker 1 
+	-----------------------------
 	cd /tmp
 	sudo bash -c "cat /tmp/ca.crt >> /etc/pki/tls/certs/ca-bundle.crt"
 	sudo systemctl restart docker.service
 
 
-	Test docker:
+	Test docker (may not work on TKG clusters past 1.6x):
 	sudo docker images
 	sudo docker login 192.168.2.3 -u administrator@vsphere.local
 	sudo docker pull 192.168.2.3/namespace1000/all-in-one-hackazon
@@ -151,14 +151,14 @@ Harbor on Project Pacific demo (enable harbor in vCenter)
 	ssh -i test-cluster-ssh-key vmware-system-user@$VM_IP2
 
 
-	Run on guest cluster worker 2 node as test
-	----------------------------------------
+	Run on guest cluster worker 2 
+	-----------------------------
 	cd /tmp
 	sudo bash -c "cat /tmp/ca.crt >> /etc/pki/tls/certs/ca-bundle.crt"
 	sudo systemctl restart docker.service
 
 
-	Test docker:
+	Test docker (may not work on TKG clusters past 1.6x):
 	sudo docker images
 	sudo docker login 192.168.2.3 -u administrator@vsphere.local
 	sudo docker pull 192.168.2.3/namespace1000/all-in-one-hackazon
