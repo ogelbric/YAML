@@ -78,6 +78,12 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl get services
 	telnet 192.168.2.2 80
 
+	If you have reached your docker max downloads
+	---------------------------------------------
+	Local Harbor: kubectl create secret docker-registry regcred --docker-server=192.168.2.3 --docker-username="administrator@vsphere.local" --docker-password='VMware1!' --docker-email=administrator@vsphere.local
+	Docker: kubectl create secret docker-registry regcred  --docker-username="DockerUsername" --docker-password='MySuperPassword1!' --docker-email=myname@mail.com
+
+
 	Storage
 	-------
 	kubectl get storageclass
