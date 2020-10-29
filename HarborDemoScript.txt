@@ -47,7 +47,7 @@ Harbor on Project Pacific demo (enable harbor in vCenter)
 	wget "https://192.168.2.3/api/systeminfo/getcert" -O ca.crt --no-check-certificate
 
 	Test login
-	docker login 192.168.2.3 -u administrator@vsphere.local
+	docker login 192.168.2.3 -u administrator@vsphere.local -p 'VMware1!'
 
 	docker images
 	docker pull bepsoccer/all-in-one-hackazon
