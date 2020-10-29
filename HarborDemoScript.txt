@@ -190,7 +190,7 @@ Try again from guest cluster
 
 	cp hackazon6.yaml hackazon6.yaml-localharbor
 
-	Change image location ad add secret to YAML file
+	Change image location and add secret to YAML file
 
 	vi hackazon6.yaml-localharbor
 
