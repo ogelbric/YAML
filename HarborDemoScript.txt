@@ -226,7 +226,7 @@ Try again from guest cluster
 
 	kubectl delete -f hackazon6.yaml-localharbor
 
-	Automarion references are here:
+	Automation references are here:
 	https://github.com/trevorputbrese/tkc/blob/master/wkld-cluster-add-cert-v2.sh
 	https://github.com/warroyo/tkgs-proxy-inject
 	
