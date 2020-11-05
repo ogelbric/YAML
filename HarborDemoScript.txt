@@ -229,5 +229,6 @@ Try again from guest cluster
 	Automation references are here:
 	https://github.com/trevorputbrese/tkc/blob/master/wkld-cluster-add-cert-v2.sh
 	https://github.com/warroyo/tkgs-proxy-inject
+	https://cormachogan.com/2020/06/23/integrating-embedded-vsphere-with-kubernetes-harbor-registry-with-tkg-guest-clusters/
 	
 
