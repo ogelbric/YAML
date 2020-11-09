@@ -56,8 +56,8 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl apply -f ./enable-policy.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/enable-policy.yaml
 
-	Sample Deployment on Supervisor cluster
-	---------------------------------------
+	Sample Deployment on Supervisor cluster (There are no native pods in HAproxy deployment!)
+	-----------------------------------------------------------------------------------------
 	kubectl get nodes
 	kubectl get ns
 	kubectl get pods --all-namespaces
