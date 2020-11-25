@@ -56,8 +56,8 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl apply -f ./enable-policy.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/enable-policy.yaml
 
-	Sample Deployment on Supervisor cluster
-	---------------------------------------
+	Sample Deployment on Supervisor cluster (There are no native pods in HAproxy deployment!)
+	-----------------------------------------------------------------------------------------
 	kubectl get nodes
 	kubectl get ns
 	kubectl get pods --all-namespaces
@@ -77,6 +77,12 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl create service loadbalancer nginxdev2 --tcp=80:80
 	kubectl get services
 	telnet 192.168.2.2 80
+
+	If you have reached your docker max downloads
+	---------------------------------------------
+	Local Harbor: kubectl create secret docker-registry regcred --docker-server=192.168.2.3 --docker-username="administrator@vsphere.local" --docker-password='VMware1!' --docker-email=administrator@vsphere.local
+	Docker: kubectl create secret docker-registry regcred  --docker-username="DockerUsername" --docker-password='MySuperPassword1!' --docker-email=myname@mail.com
+
 
 	Storage
 	-------
@@ -102,8 +108,8 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	-----------------------------
 	kubectl get tanzukubernetesclusters
 
-	Deploy Guest Cluster 
-	--------------------------------------------
+	Deploy Guest Cluster (for HAproxy deployment change CNI to antrea!)
+	-------------------------------------------------------------------
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA-1workers.yaml.1178tkg
 	kubectl apply -f ./guestcluster1001GA-1workers.yaml.1178tkg
 
