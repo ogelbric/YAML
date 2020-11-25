@@ -110,6 +110,10 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 
 	Deploy Guest Cluster (for HAproxy deployment change CNI to antrea!)
 	-------------------------------------------------------------------
+	HAproxy 
+	kubectl apply -f https://github.com/ogelbric/YAML/blob/master/tanzu-tkc.yaml
+	
+	NSX
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/guestcluster1001GA-1workers.yaml.1178tkg
 	kubectl apply -f ./guestcluster1001GA-1workers.yaml.1178tkg
 
