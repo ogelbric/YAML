@@ -107,9 +107,13 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl delete pod mongodb-0
 	kubectl delete -f ./nginx-lbsvcGA.yaml
 
-	Get current managed clusters:
-	-----------------------------
+	Get current managed clusters and check on a few items:
+	------------------------------------------------------
 	kubectl get tanzukubernetesclusters
+	kubectl get virtualmachineimages
+	kubectl get virtualmachineclasses
+	kubectl get virtualmachineclassbindings (7u2a)
+	
 
 	Deploy Guest Cluster (for HAproxy deployment change CNI to antrea!)
 	-------------------------------------------------------------------
@@ -136,34 +140,30 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl -n namespace1000 get events -w
 
 	Check on the guest cluster:
-	---------------------------	
+	---------------------------
+	kubectl api-resources 
 	kubectl get all -A
 	kubectl get nodes
 	kubectl get tanzukubernetesclusters
 	kubectl describe tanzukubernetescluster tkg-cluster-1
 	kubectl describe virtualmachineservice
-	kubectl describe virtualnetwork
+	kubectl describe networks
 	kubectl -n namespace1000 get events -w
 	kubectl get cluster,machines,virtualmachines
 	kubectl describe clusters.cluster.x-k8s.io tkg-cluster-1
 	kubectl get machine.cluster.x-k8s.io    #Cluster API
 	kubectl describe virtualmachines
-	kubectl get virtualmachineimages
 	
-	Get to the new guest cluster(s)
-	--------------------------------
-	/usr/local/bin/kubectl-vsphere login --vsphere-username administrator@vsphere.local --server=https://192.168.2.1 --insecure-skip-tls-verify
-	
-	kubectl config get-contexts
-	kubectl config use-context namespace1000
-	kubectl get services # get IP for new cluster
+	Guest cluster login
+	-------------------
 
-	kubectl vsphere login --server 192.168.2.1 \
-                --vsphere-username administrator@vsphere.local \
-                --managed-cluster-namespace namespace1000 \
-                --managed-cluster-name tkg-cluster-1 \
-                --insecure-skip-tls-verify
+	7.0
+	---
+	kubectl vsphere login --server 192.168.2.1 --vsphere-username administrator@vsphere.local --managed-cluster-namespace namespace1000 --managed-cluster-name tkg-cluster-1 --insecure-skip-tls-verify
 
+	7.0u2
+	-----
+	kubectl vsphere login --server 192.168.5.40 --vsphere-username administrator@vsphere.local --tanzu-kubernetes-cluster-namespace namespace1000 --tanzu-kubernetes-cluster-name tkg-berlin --insecure-skip-tls-verify
 
 	kubectl config use-context tkg-cluster-1
 	
