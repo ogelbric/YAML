@@ -34,14 +34,14 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	----------------
 	In browser go API end point and download kubectl installer
 	https://192.168.2.1/
-
+	Alternative: wget --no-check-certificate https://192.168.1.61/wcp/plugin/linux-amd64/vsphere-plugin.zip
+	
 	Content library on vCenter(Kubernetes)
 	--------------------------------------
 	
 	https://wp-content.vmware.com/v2/latest/lib.json   (kubectl get virtualmachineimages)
 						 	   (kubectl describe virtualmachineimages)
-	Alternative: wget --no-check-certificate https://192.168.1.61/wcp/plugin/linux-amd64/vsphere-plugin.zip
-
+	
 	Map content lib to namespace/vSphere cluster       (kubectl get virtualmachineclasses)
 	Create bindings - VM Services tile                 (kubectl get virtualmachineclassbindings)
 
@@ -59,8 +59,8 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl apply -f ./enable-policy.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/enable-policy.yaml
 
-	Sample Deployment on Supervisor cluster (There are no native pods in HAproxy deployment!)
-	-----------------------------------------------------------------------------------------
+	Sample Deployment on Supervisor cluster (There are no native pods in HAproxy deployment and NSX Advanced load balancer (AVI))
+	-------------------------------------------------------------------------------------------------------------------------------
 	kubectl get nodes
 	kubectl get ns
 	kubectl get pods --all-namespaces
