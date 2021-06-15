@@ -1,0 +1,38 @@
+# cluster.yaml
+---
+apiVersion: run.tanzu.vmware.com/v1alpha1
+kind: TanzuKubernetesCluster
+metadata:
+  name: tkg-berlin
+  namespace: namespace1000
+spec:
+  distribution:
+    version: v1.18.15
+  topology:
+    controlPlane:
+      count: 1
+      class: best-effort-medium
+      storageClass: pacific-gold-storage-policy
+      volumes:
+        - name: etcd
+          mountPath: /var/lib/etcd
+          capacity:
+            storage: 4Gi
+    workers:
+      count: 2
+      class: best-effort-medium
+      storageClass: pacific-gold-storage-policy
+      volumes:
+        - name: containerd
+          mountPath: /var/lib/containerd
+          capacity:
+            storage: 30Gi
+  settings:
+    network:
+      services:
+        cidrBlocks: ["198.51.100.0/24"]
+      pods:
+        cidrBlocks: ["192.0.2.0/22"]
+    storage:
+      classes: ["pacific-gold-storage-policy"]
+      defaultClass: pacific-gold-storage-policy
