@@ -1,0 +1,26 @@
+apiVersion: run.tanzu.vmware.com/v1alpha1
+kind: TanzuKubernetesCluster
+metadata:
+  name: tkg-berlin
+  namespace: namespace1000
+spec:
+  distribution:
+    version: v1.18.5
+    fullVersion:
+  topology:
+    controlPlane:
+      count: 1
+      class: best-effort-small
+      storageClass: pacific-gold-storage-policy
+    workers:
+      count: 3
+      class: best-effort-small
+      storageClass: pacific-gold-storage-policy
+  settings:
+    network:
+      cni:
+        name: calico
+      services:
+        cidrBlocks: ["198.51.100.0/12"]
+      pods:
+        cidrBlocks: ["192.0.2.0/16"]
