@@ -40,7 +40,10 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	
 	https://wp-content.vmware.com/v2/latest/lib.json   (kubectl get virtualmachineimages)
 						 	   (kubectl describe virtualmachineimages)
-	Map content lib to namespace/vSphere cluster
+	Alternative: wget --no-check-certificate https://192.168.1.61/wcp/plugin/linux-amd64/vsphere-plugin.zip
+
+	Map content lib to namespace/vSphere cluster       (kubectl get virtualmachineclasses)
+	Create bindings - VM Services tile                 (kubectl get virtualmachineclassbindings)
 
 	Log onto Supervisor Cluster:
 	----------------------------
