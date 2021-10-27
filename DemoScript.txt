@@ -172,9 +172,13 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	7.0u2
 	-----
 	kubectl vsphere login --server 192.168.5.40 --vsphere-username administrator@vsphere.local --tanzu-kubernetes-cluster-namespace namespace1000 --tanzu-kubernetes-cluster-name tkg-berlin --insecure-skip-tls-verify
-
 	kubectl config use-context tkg-cluster-1
 	
+	7.0u3
+	-----
+	kubectl vsphere login --server 192.168.5.40 --vsphere-username administrator@vsphere.local --tanzu-kubernetes-cluster-namespace namespace1000 --tanzu-kubernetes-cluster-name workload-vsphere-tkg2 --insecure-skip-tls-verify
+	kubeclt config use-context workload-vsphere-tkg2
+
 	kubectl config set-context --current --namespace=default
 	kubectl get all -A
 	kubectl get nodes
