@@ -228,4 +228,6 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	Delete vapp in base vCenter
 
 
-
+	DNS and NTP guestcluster investigation script
+	https://github.com/ogelbric/YAML/blob/master/DNScheckerANDNTP
+	
