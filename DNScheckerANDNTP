@@ -1,0 +1,96 @@
+
+
+This script will check per vCenter namespace the existing guest clusters DNS and NTP settings. 
+
+
+#!/bin/bash
+#log onto supervisor cluster
+#kubectl-vsphere login --vsphere-username administrator@vsphere.local --server=https://192.168.5.40 --insecure-skip-tls-verify
+#swap to context
+#kubectl config use-context namespace1000
+
+#Namespace
+echo "Current Namespace"
+echo "-----------------"
+kubectl config current-context | awk '{ print $1 }'
+#Cycle through clusters
+kubectl get tkc | awk '{ print $1 }' | grep -v NAME  > clusternames
+for ff in `cat clusternames`
+do
+  echo "+------------------------------------------+"
+  printf "| Cluster: %31s |\n" $ff
+  echo "+------------------------------------------+"
+  #Secret
+  export s1=`kubectl get secret | grep "$ff" | grep "ssh " | awk '{ print $1 }'`
+  #k8 cluster IP's
+  kubectl get virtualmachines -o wide -A | grep "$ff" | awk '{ print $6 }' > clusterips
+  #Filename for key
+  export f1=$ff-cluster-ssh-key
+  #The key
+  kubectl get secret $s1 -n `kubectl config current-context | awk '{ print $1 }'` -o jsonpath='{.data.ssh-privatekey}' | base64 -d > $f1
+  chmod 400 $f1
+  for f in `cat clusterips`
+  do
+    echo "+------------------------------------------+"
+    printf "| Nodes: %33s |\n" $f
+    echo "+------------------------------------------+"
+    ssh -q -i $f1 vmware-system-user@"$f"  'grep ^DNS /etc/systemd/network/*eth*'
+    ssh -q -i $f1 vmware-system-user@"$f"  'resolvectl status | grep "Current DNS"'
+    ssh -q -i $f1 vmware-system-user@"$f"  'grep "NTP=" /etc/systemd/timesyncd.conf'
+    ssh -q -i $f1 vmware-system-user@"$f"  'systemctl status systemd-timesyncd | grep "Status:"'
+    #More NTP info at below URL
+    #https://communities.vmware.com/t5/VMware-vCenter-Documents/Verify-NTP-Configuration-on-a-VMware-Photon-Appliance/ta-p/2779537
+  done
+done
+
+
+
+The output looks like this: 
+
+namespace1000
++------------------------------------------+
+| Cluster:           workload-vsphere-tkg1 |
++------------------------------------------+
++------------------------------------------+
+| Nodes:                     192.168.7.157 |
++------------------------------------------+
+DNS=10.197.79.7
+  Current DNS Server: 10.197.79.7
+#NTP=
+#FallbackNTP=time1.google.com time2.google.com time3.google.com time4.google.com
+   Status: "Synchronized to time server 10.128.152.81:123 (10.128.152.81)."
++------------------------------------------+
+| Nodes:                     192.168.7.158 |
++------------------------------------------+
+DNS=10.197.79.7
+  Current DNS Server: 10.197.79.7
+#NTP=
+#FallbackNTP=time1.google.com time2.google.com time3.google.com time4.google.com
+   Status: "Synchronized to time server 10.128.152.81:123 (10.128.152.81)."
++------------------------------------------+
+| Cluster:           workload-vsphere-tkg2 |
++------------------------------------------+
++------------------------------------------+
+| Nodes:                     192.168.7.154 |
++------------------------------------------+
+DNS=10.197.79.7
+  Current DNS Server: 10.197.79.7
+#NTP=
+#FallbackNTP=time1.google.com time2.google.com time3.google.com time4.google.com
+   Status: "Synchronized to time server 10.128.152.81:123 (10.128.152.81)."
++------------------------------------------+
+| Nodes:                     192.168.7.156 |
++------------------------------------------+
+DNS=10.197.79.7
+  Current DNS Server: 10.197.79.7
+#NTP=
+#FallbackNTP=time1.google.com time2.google.com time3.google.com time4.google.com
+   Status: "Synchronized to time server 10.128.152.81:123 (10.128.152.81)."
++------------------------------------------+
+| Nodes:                     192.168.7.155 |
++------------------------------------------+
+DNS=10.197.79.7
+  Current DNS Server: 10.197.79.7
+#NTP=
+#FallbackNTP=time1.google.com time2.google.com time3.google.com time4.google.com
+   Status: "Synchronized to time server 10.128.152.81:123 (10.128.152.81)."
