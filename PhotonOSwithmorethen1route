@@ -1,0 +1,167 @@
+Photon OS routing with 2 gateways
+===================================
+192.168.3.x (mgt) 192.168.3.5 (gw 3.1)
+192.168.5.x (Front) 192.168.5.5 (gw 5.1)
+
+release
+-------
+root@photon-machine [ /etc/systemd/network ]# cat /etc/photon-release 
+VMware Photon OS 4.0
+PHOTON_BUILD_NUMBER=1526e30ba
+
+check out networks we have on the machine
+------------------------------------------
+networkctl 
+IDX LINK TYPE     OPERATIONAL SETUP      
+  1 lo   loopback carrier     unmanaged 
+  2 eth0 ether    routable    configured
+  3 eth1 ether    routable    configured
+
+set up network
+---------------
+cat > /etc/systemd/network/10-static-en.network << "EOF"
+
+[Match]
+Name=eth0
+
+[Network]
+Address=192.168.3.5/24
+Gateway=192.168.3.1
+DNS=192.168.3.1
+EOF
+
+cat > /etc/systemd/network/20-static-en.network << "EOF"
+
+[Match]
+Name=eth1
+
+[Network]
+Address=192.168.5.5/24
+Gateway=192.168.5.1
+DNS=192.168.5.1
+EOF
+
+permission
+------------
+chmod 644 10-static-en.network
+chmod 644 20-static-en.network
+
+disable dhcp
+-------------
+vi 99-dhcp-en.network
+DHCP=no
+
+restart network
+----------------
+systemctl restart systemd-networkd
+journalctl -u systemd-networkd
+
+allow ping (for percistence add to /etc/systemd/scripts/iptables)
+------------------------------------------------------------------
+iptables -A OUTPUT -p icmp -j ACCEPT
+iptables -A INPUT -p icmp -j ACCEPT
+
+install some utils
+-------------------
+tdnf install tcpdump
+yum install iputils
+
+routing rules
+--------------
+cat /etc/iproute2/rt_tables
+echo "1 eth0" >> /etc/iproute2/rt_tables
+echo "2 eth1" >> /etc/iproute2/rt_tables
+cat /etc/iproute2/rt_tables
+
+
+current state or rules and routes
+----------------------------------
+ip route show
+default via 192.168.3.1 dev eth0 proto static 
+default via 192.168.5.1 dev eth1 proto static 
+192.168.3.0/24 dev eth0 proto kernel scope link src 192.168.3.6 
+192.168.5.0/24 dev eth1 proto kernel scope link src 192.168.5.6 
+
+ip rule show
+0:      from all lookup local
+32766:  from all lookup main
+32767:  from all lookup default
+
+Delete the default routes out of the .network files
+systemctl restart systemd-networkd; journalctl -u systemd-networkd
+May have to be done via console unless you save below section in /tmp so it cam be executed from console
+or have another system on same subnet
+
+new routes and rules (for percistence this may have to be added to a OS start up file with the flush)
+-----------------------------------------------------------------------------------------------------
+ip route add 192.168.5.1/24 dev eth1 src 192.168.5.6 table eth1
+ip route add default via 192.168.5.1 dev eth1 table eth1
+
+ip rule add from 192.168.5.6/32 table eth1
+ip rule add to 192.168.5.6/32 table eth1
+
+ip route add 192.168.3.1/24 dev eth1 src 192.168.3.6 table eth0
+ip route add default via 192.168.3.1 dev eth1 table eth0
+
+ip rule add from 192.168.3.6/32 table eth0
+ip rule add to 192.168.3.6/32 table eth0
+
+lets look
+----------
+ip route flush cache
+ip route show
+ip rule show
+
+results
+--------
+ip route show
+192.168.3.0/24 dev eth0 proto kernel scope link src 192.168.3.6 
+192.168.5.0/24 dev eth1 proto kernel scope link src 192.168.5.6 
+
+ip rule show
+0:      from all lookup local
+32762:  from all to 192.168.3.6 lookup eth0
+32763:  from 192.168.3.6 lookup eth0
+32764:  from all to 192.168.5.6 lookup eth1
+32765:  from 192.168.5.6 lookup eth1
+32766:  from all lookup main
+32767:  from all lookup default
+
+rule 32762 means anything coming for 192.168.3.6 will use table "eth0"
+rule 32763 means anything from 192.168.3.6 will use table "eth0"
+
+netstat -nr
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+192.168.3.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0
+192.168.5.0     0.0.0.0         255.255.255.0   U         0 0          0 eth1
+
+networkctl status
+●   State: routable                        
+  Address: 192.168.3.6 on eth0             
+           192.168.5.6 on eth1             
+           fe80::250:56ff:fe82:a4a1 on eth0
+           fe80::250:56ff:fe82:1d4 on eth1 
+      DNS: 192.168.3.1                     
+           192.168.5.1                     
+
+test from different machine(ping) and listen on eth0 and eth1 (I did this from the console)
+---------------------------------------------------------------------------------------------
+tcpdump -i eth1 dst 192.168.5.1 (works)
+tcpdump -i eth0 dst 192.168.5.1 (should not work)
+tcpdump -i eth1 dst 192.168.3.1 (should not work)
+tcpdump -i eth0 dst 192.168.3.1 (works)
+
+
+random comands
+---------------
+ip a
+ip rule list
+ip rule show
+ip route show
+route -n
+journalctl -u systemd-networkd
+systemctl restart systemd-networkd
+systemctl status systemd-networkd | grep Active
+arp -a
+
