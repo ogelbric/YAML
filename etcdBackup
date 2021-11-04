@@ -1,0 +1,61 @@
+Etc DB back up 0n the master node (ssh to it)
+=====================================
+
+Inspiration
+https://ystatit.medium.com/backup-and-restore-kubernetes-etcd-on-the-same-control-plane-node-20f4e78803cb
+
+
+Install jq
+
+curl -L'#' -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && chmod +x /usr/bin/jq
+
+Get etc
+kubectl --kubeconfig /etc/kubernetes/admin.conf  get pods -A | grep etc | awk '{print $2}'
+
+kubectl --kubeconfig /etc/kubernetes/admin.conf  get pods `kubectl --kubeconfig /etc/kubernetes/admin.conf  get pods -A | grep etc | awk '{print $2}'` -n kube-system  -o=jsonpath='{.spec.containers[0].command}' | jq
+
+
+[
+  "etcd",
+  "--advertise-client-urls=https://192.168.7.154:2379",
+  "--cert-file=/etc/kubernetes/pki/etcd/server.crt",
+  "--client-cert-auth=true",
+  "--data-dir=/var/lib/etcd",
+  "--initial-advertise-peer-urls=https://192.168.7.154:2380",
+  "--initial-cluster=workload-vsphere-tkg2-control-plane-fk5hw=https://192.168.7.154:2380",
+  "--key-file=/etc/kubernetes/pki/etcd/server.key",
+  "--listen-client-urls=https://127.0.0.1:2379,https://192.168.7.154:2379",
+  "--listen-metrics-urls=http://127.0.0.1:2381",
+  "--listen-peer-urls=https://192.168.7.154:2380",
+  "--name=workload-vsphere-tkg2-control-plane-fk5hw",
+  "--peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt",
+  "--peer-client-cert-auth=true",
+  "--peer-key-file=/etc/kubernetes/pki/etcd/peer.key",
+  "--peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt",
+  "--snapshot-count=10000",
+  "--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt"
+]
+
+find / -type f -name "*etcdctl*" -print 
+/run/containerd/io.containerd.runtime.v1.linux/k8s.io/823581f975804b65048f4babe2015a95cfa7ed6f767073796afe47b9d03299fb/rootfs/usr/local/bin/etcdctl
+/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/19/fs/usr/local/bin/etcdctl
+
+
+/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/19/fs/usr/local/bin/etcdctl snapshot save /tmp/etcdBackup1.db \
+--endpoints=https://192.168.7.154:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key
+
+Where is it…
+ls -l  /tmp/etcdBackup1.db
+
+/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/19/fs/usr/local/bin/etcdctl --write-out=table snapshot status /tmp/etcdBackup1.db
+
+root [ /home/vmware-system-user ]# /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/19/fs/usr/local/bin/etcdctl --write-out=table snapshot status /tmp/etcdBackup1.db
++----------+----------+------------+------------+
+|   HASH   | REVISION | TOTAL KEYS | TOTAL SIZE |
++----------+----------+------------+------------+
+| 920996f0 |  3728547 |       3886 |      16 MB |
++----------+----------+------------+------------+
+root [ /home/vmware-system-user ]# 
