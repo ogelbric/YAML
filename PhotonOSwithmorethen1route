@@ -100,8 +100,8 @@ ip route add default via 192.168.5.1 dev eth1 table eth1
 ip rule add from 192.168.5.6/32 table eth1
 ip rule add to 192.168.5.6/32 table eth1
 
-ip route add 192.168.3.1/24 dev eth1 src 192.168.3.6 table eth0
-ip route add default via 192.168.3.1 dev eth1 table eth0
+ip route add 192.168.3.1/24 dev eth0 src 192.168.3.6 table eth0
+ip route add default via 192.168.3.1 dev eth0 table eth0
 
 ip rule add from 192.168.3.6/32 table eth0
 ip rule add to 192.168.3.6/32 table eth0
