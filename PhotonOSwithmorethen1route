@@ -1,7 +1,9 @@
-Photon OS routing with 2 gateways
+Photon OS routing with 4 gateways
 ===================================
-192.168.3.x (mgt) 192.168.3.5 (gw 3.1)
-192.168.5.x (Front) 192.168.5.5 (gw 5.1)
+192.168.4.200 - received rom DHCP wil leave interface alone so we can ssh / eth0
+192.168.3.x (mgt) 192.168.3.5 (gw 3.1) / eth1
+192.168.5.x (Front) 192.168.5.5 (gw 5.1) / eth2
+192.168.7.x (Workload) 192.168.7.5 (gw 7.1) / eth3
 
 release
 -------
@@ -15,153 +17,303 @@ networkctl
 IDX LINK TYPE     OPERATIONAL SETUP      
   1 lo   loopback carrier     unmanaged 
   2 eth0 ether    routable    configured
-  3 eth1 ether    routable    configured
+
+Current .network files
+-----------------------
+root@photon-machine [ ~ ]# ls /etc/systemd/network/
+99-dhcp-en.network
+root@photon-machine [ ~ ]# 
 
 set up network
 ---------------
+cd /etc/systemd/network
+
 cat > /etc/systemd/network/10-static-en.network << "EOF"
 
 [Match]
-Name=eth0
+Name=eth1
 
 [Network]
 Address=192.168.3.5/24
-Gateway=192.168.3.1
 DNS=192.168.3.1
 EOF
 
 cat > /etc/systemd/network/20-static-en.network << "EOF"
 
 [Match]
-Name=eth1
+Name=eth2
 
 [Network]
 Address=192.168.5.5/24
-Gateway=192.168.5.1
 DNS=192.168.5.1
+EOF
+
+cat > /etc/systemd/network/30-static-en.network << "EOF"
+
+[Match]
+Name=eth3
+
+[Network]
+Address=192.168.7.5/24
+DNS=192.168.7.1
 EOF
 
 permission
 ------------
 chmod 644 10-static-en.network
 chmod 644 20-static-en.network
+chmod 644 30-static-en.network
 
-disable dhcp
--------------
+disable dhcp on other network interfaces
+-----------------------------------------
 vi 99-dhcp-en.network
-DHCP=no
+change Name=e* to Name=eth0
 
-restart network
+Adding to the VM 3 more networks (VM -> edit settings)
+----------------------------------------------------------
+
+Network at this state
+----------------------
+root@photon-machine [ /etc/systemd/network ]# networkctl
+IDX LINK TYPE     OPERATIONAL SETUP      
+  1 lo   loopback carrier     unmanaged  
+  2 eth0 ether    routable    configured 
+  3 eth1 ether    degraded    configuring
+  4 eth2 ether    degraded    configuring
+  5 eth3 ether    degraded    configuring
+
+root@photon-machine [ /etc/systemd/network ]# ip a | grep "inet "
+    inet 127.0.0.1/8 scope host lo
+    inet 192.168.4.200/24 brd 192.168.4.255 scope global dynamic eth0
+
+root@photon-machine [ /etc/systemd/network ]# netstat -nr
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+0.0.0.0         192.168.4.1     0.0.0.0         UG        0 0          0 eth0
+192.168.4.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0
+192.168.4.1     0.0.0.0         255.255.255.255 UH        0 0          0 eth0
+
+root@photon-machine [ /etc/systemd/network ]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.4.1     0.0.0.0         UG    1024   0        0 eth0
+192.168.4.0     0.0.0.0         255.255.255.0   U     0      0        0 eth0
+192.168.4.1     0.0.0.0         255.255.255.255 UH    1024   0        0 eth0
+
+restart machine
 ----------------
-systemctl restart systemd-networkd
-journalctl -u systemd-networkd
+init 6
 
-allow ping (for percistence add to /etc/systemd/scripts/iptables)
-------------------------------------------------------------------
+Network situation now
+----------------------
+root@photon-machine [ ~ ]# ip a | grep "inet "
+    inet 127.0.0.1/8 scope host lo
+    inet 192.168.4.200/24 brd 192.168.4.255 scope global dynamic eth0
+    inet 192.168.3.5/24 brd 192.168.3.255 scope global eth1
+    inet 192.168.5.5/24 brd 192.168.5.255 scope global eth2
+    inet 192.168.7.5/24 brd 192.168.7.255 scope global eth3
+
+root@photon-machine [ ~ ]# netstat -nr
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+0.0.0.0         192.168.4.1     0.0.0.0         UG        0 0          0 eth0
+192.168.3.0     0.0.0.0         255.255.255.0   U         0 0          0 eth1
+192.168.4.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0
+192.168.4.1     0.0.0.0         255.255.255.255 UH        0 0          0 eth0
+192.168.5.0     0.0.0.0         255.255.255.0   U         0 0          0 eth2
+192.168.7.0     0.0.0.0         255.255.255.0   U         0 0          0 eth3
+
+root@photon-machine [ ~ ]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.4.1     0.0.0.0         UG    1024   0        0 eth0
+192.168.3.0     0.0.0.0         255.255.255.0   U     0      0        0 eth1
+192.168.4.0     0.0.0.0         255.255.255.0   U     0      0        0 eth0
+192.168.4.1     0.0.0.0         255.255.255.255 UH    1024   0        0 eth0
+192.168.5.0     0.0.0.0         255.255.255.0   U     0      0        0 eth2
+192.168.7.0     0.0.0.0         255.255.255.0   U     0      0        0 eth3
+
+root@photon-machine [ ~ ]# ip route show
+default via 192.168.4.1 dev eth0 proto dhcp src 192.168.4.200 metric 1024 
+192.168.3.0/24 dev eth1 proto kernel scope link src 192.168.3.5 
+192.168.4.0/24 dev eth0 proto kernel scope link src 192.168.4.200 
+192.168.4.1 dev eth0 proto dhcp scope link src 192.168.4.200 metric 1024 
+192.168.5.0/24 dev eth2 proto kernel scope link src 192.168.5.5 
+192.168.7.0/24 dev eth3 proto kernel scope link src 192.168.7.5 
+
+allow ping in both directions (for percistence add to /etc/systemd/scripts/iptables)
+--------------------------------------------------------------------------------------
 iptables -A OUTPUT -p icmp -j ACCEPT
 iptables -A INPUT -p icmp -j ACCEPT
 
 install some utils
 -------------------
-tdnf install tcpdump
+tdnf install tcpdump -y
 yum install iputils
 
 routing rules
 --------------
 cat /etc/iproute2/rt_tables
-echo "1 eth0" >> /etc/iproute2/rt_tables
-echo "2 eth1" >> /etc/iproute2/rt_tables
+echo "1 eth1rule" >> /etc/iproute2/rt_tables
+echo "2 eth2rule" >> /etc/iproute2/rt_tables
+echo "3 eth3rule" >> /etc/iproute2/rt_tables
 cat /etc/iproute2/rt_tables
 
 
 current state or rules and routes
 ----------------------------------
-ip route show
-default via 192.168.3.1 dev eth0 proto static 
-default via 192.168.5.1 dev eth1 proto static 
-192.168.3.0/24 dev eth0 proto kernel scope link src 192.168.3.6 
-192.168.5.0/24 dev eth1 proto kernel scope link src 192.168.5.6 
+root@photon-machine [ ~ ]# ip route show
+default via 192.168.4.1 dev eth0 proto dhcp src 192.168.4.200 metric 1024 
+192.168.3.0/24 dev eth1 proto kernel scope link src 192.168.3.5 
+192.168.4.0/24 dev eth0 proto kernel scope link src 192.168.4.200 
+192.168.4.1 dev eth0 proto dhcp scope link src 192.168.4.200 metric 1024 
+192.168.5.0/24 dev eth2 proto kernel scope link src 192.168.5.5 
+192.168.7.0/24 dev eth3 proto kernel scope link src 192.168.7.5 
 
-ip rule show
+root@photon-machine [ ~ ]# ip rule show
 0:      from all lookup local
 32766:  from all lookup main
 32767:  from all lookup default
 
-Delete the default routes out of the .network files
-systemctl restart systemd-networkd; journalctl -u systemd-networkd
-May have to be done via console unless you save below section in /tmp so it cam be executed from console
-or have another system on same subnet
+
 
 new routes and rules (for percistence this may have to be added to a OS start up file with the flush)
 -----------------------------------------------------------------------------------------------------
-ip route add 192.168.5.1/24 dev eth1 src 192.168.5.6 table eth1
-ip route add default via 192.168.5.1 dev eth1 table eth1
-
-ip rule add from 192.168.5.6/32 table eth1
-ip rule add to 192.168.5.6/32 table eth1
-
-ip route add 192.168.3.1/24 dev eth0 src 192.168.3.6 table eth0
-ip route add default via 192.168.3.1 dev eth0 table eth0
-
-ip rule add from 192.168.3.6/32 table eth0
-ip rule add to 192.168.3.6/32 table eth0
+cat > /usr/local/mynewroutes << "EOF"
+#
+# .3 network
+#
+ip route add 192.168.3.1 dev eth1 src 192.168.3.5 table eth1rule
+ip route add default via 192.168.3.1 dev eth1 table eth1rule
+ip rule add from 192.168.3.5/32 table eth1rule
+ip rule add to 192.168.3.5/32 table eth1rule
+#
+# .5 network
+#
+ip route add 192.168.5.1 dev eth2 src 192.168.5.5 table eth2rule
+ip route add default via 192.168.5.1 dev eth2 table eth2rule
+ip rule add from 192.168.5.5/32 table eth2rule
+ip rule add to 192.168.5.5/32 table eth2rule
+#
+# .7 network
+#
+ip route add 192.168.7.1 dev eth3 src 192.168.7.5 table eth3rule
+ip route add default via 192.168.7.1 dev eth3 table eth3rule
+ip rule add from 192.168.7.5/32 table eth3rule
+ip rule add to 192.168.7.5/32 table eth3rule
+EOF
+chmod +x /usr/local/mynewroutes
+/usr/local/mynewroutes
 
 lets look
 ----------
 ip route flush cache
-ip route show
-ip rule show
 
-results
---------
-ip route show
-192.168.3.0/24 dev eth0 proto kernel scope link src 192.168.3.6 
-192.168.5.0/24 dev eth1 proto kernel scope link src 192.168.5.6 
+root@photon-machine [ ~ ]# ip route show
+default via 192.168.4.1 dev eth0 proto dhcp src 192.168.4.200 metric 1024 
+192.168.3.0/24 dev eth1 proto kernel scope link src 192.168.3.5 
+192.168.4.0/24 dev eth0 proto kernel scope link src 192.168.4.200 
+192.168.4.1 dev eth0 proto dhcp scope link src 192.168.4.200 metric 1024 
+192.168.5.0/24 dev eth2 proto kernel scope link src 192.168.5.5 
+192.168.7.0/24 dev eth3 proto kernel scope link src 192.168.7.5 
 
-ip rule show
+root@photon-machine [ ~ ]# ip rule show
 0:      from all lookup local
-32762:  from all to 192.168.3.6 lookup eth0
-32763:  from 192.168.3.6 lookup eth0
-32764:  from all to 192.168.5.6 lookup eth1
-32765:  from 192.168.5.6 lookup eth1
+32760:  from all to 192.168.7.5 lookup eth3rule
+32761:  from 192.168.7.5 lookup eth3rule
+32762:  from all to 192.168.5.5 lookup eth2rule
+32763:  from 192.168.5.5 lookup eth2rule
+32764:  from all to 192.168.3.5 lookup eth1rule
+32765:  from 192.168.3.5 lookup eth1rule
 32766:  from all lookup main
 32767:  from all lookup default
+root@photon-machine [ ~ ]# 
 
-rule 32762 means anything coming for 192.168.3.6 will use table "eth0"
-rule 32763 means anything from 192.168.3.6 will use table "eth0"
+rule 32764 means anything coming for 192.168.3.5 will use table "eth1rule"
+rule 32765 means anything from 192.168.5 will use table "eth1rule" 
+...and so on...
 
-netstat -nr
-Kernel IP routing table
-Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
-192.168.3.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0
-192.168.5.0     0.0.0.0         255.255.255.0   U         0 0          0 eth1
+root@photon-machine [ ~ ]# ip route show table all | grep default
+default via 192.168.3.1 dev eth1 table eth1rule 
+default via 192.168.5.1 dev eth2 table eth2rule 
+default via 192.168.7.1 dev eth3 table eth3rule 
+default via 192.168.4.1 dev eth0 proto dhcp src 192.168.4.200 metric 1024 
+root@photon-machine [ ~ ]# 
 
-networkctl status
-●   State: routable                        
-  Address: 192.168.3.6 on eth0             
-           192.168.5.6 on eth1             
-           fe80::250:56ff:fe82:a4a1 on eth0
-           fe80::250:56ff:fe82:1d4 on eth1 
-      DNS: 192.168.3.1                     
-           192.168.5.1                     
+root@photon-machine [ ~ ]# ip route show table eth1rule
+default via 192.168.3.1 dev eth1 
+192.168.3.1 dev eth1 scope link src 192.168.3.5 
+root@photon-machine [ ~ ]# ip route show table eth2rule
+default via 192.168.5.1 dev eth2 
+192.168.5.1 dev eth2 scope link src 192.168.5.5 
+root@photon-machine [ ~ ]# ip route show table eth3rule
+default via 192.168.7.1 dev eth3 
+192.168.7.1 dev eth3 scope link src 192.168.7.5 
 
-test from different machine(ping) and listen on eth0 and eth1 (I did this from the console)
----------------------------------------------------------------------------------------------
-tcpdump -i eth1 dst 192.168.5.1 (works)
-tcpdump -i eth0 dst 192.168.5.1 (should not work)
-tcpdump -i eth1 dst 192.168.3.1 (should not work)
-tcpdump -i eth0 dst 192.168.3.1 (works)
+
+
+root@photon-machine [ ~ ]# networkctl status
+●   State: routable                          
+  Address: 192.168.4.200 on eth0             
+           192.168.3.5 on eth1               
+           192.168.5.5 on eth2               
+           192.168.7.5 on eth3               
+           fe80::250:56ff:fe82:7f89 on eth0  
+           fe80::250:56ff:fe82:b07e on eth1  
+           fe80::250:56ff:fe82:7bf0 on eth2  
+           fe80::250:56ff:fe82:7ec9 on eth3  
+  Gateway: 192.168.4.1 (VMware, Inc.) on eth0
+      DNS: 192.168.5.1                       
+           192.168.7.1                       
+           10.197.79.7                       
+           192.168.3.1                       
+
+Nov 05 13:29:34 photon-machine systemd-networkd[319]: eth1: Link UP
+Nov 05 13:29:34 photon-machine systemd-networkd[319]: eth1: Gained carrier
+Nov 05 13:29:34 photon-machine systemd-networkd[319]: eth0: Link UP
+Nov 05 13:29:34 photon-machine systemd-networkd[319]: eth0: Gained carrier
+Nov 05 13:29:35 photon-machine systemd-networkd[319]: eth0: Gained IPv6LL
+Nov 05 13:29:35 photon-machine systemd-networkd[319]: eth3: Gained IPv6LL
+Nov 05 13:29:36 photon-machine systemd-networkd[319]: eth2: Gained IPv6LL
+Nov 05 13:29:36 photon-machine systemd-networkd[319]: eth1: Gained IPv6LL
+Nov 05 13:29:39 photon-machine systemd-networkd[319]: eth0: DHCPv4 address 192.168.4.200/24 via 192.168.4.1
+Nov 05 13:29:48 photon-machine systemd[1]: Finished Wait for Network to be Configured.
+                  
+
+test from different machine(ping) and listen on eth1 and eth2 and eth3
+-----------------------------------------------------------------------
+ping from 192.168.3.1 to 192.168.3.5
+  tcpdump -i eth1 dst 192.168.3.1 (works)
+  tcpdump -i eth2 dst 192.168.3.1 (does not work as expected) 
+  tcpdump -i eth3 dst 192.168.3.1 (does not work as expected)
+
+ping from 192.168.5.1 to 192.168.5.5
+  tcpdump -i eth1 dst 192.168.5.1 (does not work as expected)
+  tcpdump -i eth2 dst 192.168.5.1 (works) 
+  tcpdump -i eth3 dst 192.168.5.1 (does not work as expected)
+
+ping from 192.168.7.1 to 192.168.7.5
+  tcpdump -i eth1 dst 192.168.7.1 (does not work as expected) 
+  tcpdump -i eth2 dst 192.168.7.1 (does not work as expected) 
+  tcpdump -i eth3 dst 192.168.7.1 (works)
 
 
 random comands
 ---------------
+
+systemctl restart systemd-networkd
+journalctl -u systemd-networkd
 ip a
 ip rule list
 ip rule show
 ip route show
+ip route show table all | grep default
 route -n
 journalctl -u systemd-networkd
 systemctl restart systemd-networkd
 systemctl status systemd-networkd | grep Active
 arp -a
+
+
+
 
