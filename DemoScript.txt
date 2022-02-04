@@ -59,7 +59,7 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl apply -f ./enable-policy.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/enable-policy.yaml
 
-	Sample Deployment on Supervisor cluster (There are no native pods in HAproxy deployment and NSX Advanced load balancer (AVI))
+	Sample Deployment on Supervisor cluster (NSXT) (There are no native pods in HAproxy deployment and NSX Advanced load balancer (AVI))
 	-------------------------------------------------------------------------------------------------------------------------------
 	kubectl get nodes
 	kubectl get ns
@@ -83,7 +83,7 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 
 	If you have reached your docker max downloads
 	---------------------------------------------
-	Local Harbor: kubectl create secret docker-registry regcred --docker-server=192.168.2.3 --docker-username="administrator@vsphere.local" --docker-password='VMware1!' --docker-email=administrator@vsphere.local
+	Local Harbor: kubectl create secret docker-registry regcred --docker-server=192.168.2.3 --docker-username="administrator@vsphere.local" --docker-password='MySuperPassword1!' --docker-email=administrator@vsphere.local
 	Docker: kubectl create secret docker-registry regcred  --docker-username="DockerUsername" --docker-password='MySuperPassword1!' --docker-email=myname@mail.com
 
 
@@ -128,6 +128,8 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/cluster.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/tkg-cluster-berlin.yaml
 
+        AVI 7u3(x)
+	kubectl apply -f https://github.com/ogelbric/YAML/raw/7u3cluster.yaml
 
 	HAproxy 
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/tanzu-tkc.yaml
