@@ -41,6 +41,17 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	
 	https://wp-content.vmware.com/v2/latest/lib.json   (kubectl get virtualmachineimages)
 						 	   (kubectl describe virtualmachineimages)
+							  
+	No Internet Environments Content lib download
+	---------------------------------------------
+	
+	Get the whole library:
+	wget -r –level=0 -E –ignore-length -x -k -p -erobots=off -np -N https://wp-content.vmware.com/v2/latest/
+
+	Get one version from the library:
+	wget -r --no-parent https://wp-content.vmware.com/v2/latest/ob-18461281-photon-3-k8s-v1.20.9---vmware.1-tkg.1.a4cee5b/
+
+
 	
 	Map content lib to namespace/vSphere cluster       (kubectl get virtualmachineclasses)
 	Create bindings - VM Services tile                 (kubectl get virtualmachineclassbindings)
@@ -117,19 +128,14 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 
 	Deploy Guest Cluster (for HAproxy deployment change CNI to antrea!)
 	-------------------------------------------------------------------
-	AVI 7u3a
-	Comming soon
 	
-	AVI 7u3
+	AVI 7u3(x)
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/7u3cluster_photon.yaml
 	Power Point for the whole AVI install and WCP enablement (https://github.com/ogelbric/YAML/blob/master/Avi_Install_ver2.pptx)
 	
 	AVI 7u2a
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/cluster.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/tkg-cluster-berlin.yaml
-
-        AVI 7u3(x)
-	kubectl apply -f https://github.com/ogelbric/YAML/raw/7u3cluster.yaml
 
 	HAproxy 
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/tanzu-tkc.yaml
