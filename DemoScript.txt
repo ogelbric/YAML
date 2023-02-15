@@ -194,6 +194,7 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 
 	kubectl apply -f authorize-psp-for-gc-service-accounts.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/authorize-psp-for-gc-service-accounts.yaml
+	Option: https://github.com/ogelbric/YAML/blob/master/rolebinding.yaml
 	
 	kubectl apply -f nginx-lbsvcGA.yaml
 	kubectl apply -f https://github.com/ogelbric/YAML/raw/master/nginx-lbsvcGA.yaml
