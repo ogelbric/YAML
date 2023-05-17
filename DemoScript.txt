@@ -43,6 +43,18 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 						 	   (kubectl describe virtualmachineimages)
 	vCenter 8
 	https://wp-content.vmware.com/v2/8.0.0/lib.json
+	
+	Alternatively, you could manually download the content library and import/drop on an internal web server and sync with it instead of the public path. 
+
+        Get the whole library
+        ---------------------
+        wget -r –level=0 -E –ignore-length -x -k -p -erobots=off -np -N https://wp-content.vmware.com/v2/latest/
+
+        Get one version from the library
+        --------------------------------
+        wget -r --no-parent https://wp-content.vmware.com/v2/latest/ob-18461281-photon-3-k8s-v1.20.9---vmware.1-tkg.1.a4cee5b/
+
+
 							  
 	No Internet Environments Content lib download
 	---------------------------------------------
