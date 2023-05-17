@@ -41,6 +41,8 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	
 	https://wp-content.vmware.com/v2/latest/lib.json   (kubectl get virtualmachineimages)
 						 	   (kubectl describe virtualmachineimages)
+	vCenter 8
+	https://wp-content.vmware.com/v2/8.0.0/lib.json
 							  
 	No Internet Environments Content lib download
 	---------------------------------------------
