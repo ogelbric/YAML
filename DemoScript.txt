@@ -1,6 +1,6 @@
 
 =============================================================================
-Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
+Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 
 ==============================================================================
 
 	Install Document
@@ -15,12 +15,12 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	cd C:\Users\Administrator\Downloads
 	C:\"Program Files"\PowerShell\7-preview\pwsh.exe C:\Users\Administrator\Downloads\project-pacific-vghetto-lab-deployment.ps1
 	
-	Create workload platform (79):			Create workload platform (96):		Dallas Server(87):
-	-------------------------------			-------------------------------		---------------------
-	DNS: 10.197.79.2				DNS: 10.197.96.7			DNS: 10.118.87.50
-	NTP: 10.128.152.81				NTP: 10.128.152.81			NTP: 10.128.152.81
-	G/W: 192.168.1.1				G/W: 192.168.1.1			G/W: 192.168.1.10
-	Start: 192.168.1.60				Start: 192.168.1.60			Start: 192.168.1.60/160
+	Create workload platform (79):			Create workload platform (96):		
+	-------------------------------			-------------------------------		
+	DNS: 10.197.79.2				DNS: 10.197.96.7			
+	NTP: 10.128.152.81				NTP: 10.128.152.81			
+	G/W: 192.168.1.1				G/W: 192.168.1.1			
+	Start: 192.168.1.60				Start: 192.168.1.60			
 	I/E CIDR: 192.168.2.0/25 | 192.168.2.128/25
 	I/E CIDR: 192.168.3.0/25 | 192.168.3.128/25
 
@@ -33,7 +33,7 @@ Demo on (ssh root@10.197.96.6) / ssh root@10.197.79.2 / ssh root@10.118.87.27
 	Kubectl commands
 	----------------
 	In browser go API end point and download kubectl installer
-	https://192.168.2.1/
+	  https://192.168.2.1/
 	Alternative: wget --no-check-certificate https://192.168.1.61/wcp/plugin/linux-amd64/vsphere-plugin.zip
 	
 	Content library on vCenter(Kubernetes)
